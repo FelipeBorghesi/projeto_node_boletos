@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Usuário</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <nav>
+        <h1>Usuário</h1>
+        <ul>
+          <li><a href="index.html">INÍCIO</a></li>
+          <li><a href="criarUsuario.html">CRIAR USUÁRIO</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main>
+      <div class="card active">
+        <h2>Consulta Usuário</h2>
+        <input id="nomePesquisa" placeholder="Digite o nome do usuário" />
+        <button id="buscar">Buscar Usuário</button>
+        <div id="respUsuario" class="result"></div>
+      </div>
+    </main>
+
+    <script>
+      function renderUserCard(user) {
+        return `
+          <div class="user-card">
+            <h3>${user.nome || '-'}</h3>
+            <p><strong>Idade:</strong> ${user.idade || '-'}</p>
+            <p><strong>Email:</strong> ${user.email || '-'}</p>
+          </div>
+        `;
+      }
+
+      function showMessage(message, type = 'erro') {
+        const target = document.getElementById('respUsuario');
+        target.className = `result ${type}`;
+        target.innerHTML = `<p>${message}</p>`;
+      }
+
+      function renderUsers(users) {
+        if (!users || users.length === 0) {
+          return '<p>Nenhum usuário encontrado.</p>';
+        }
+
+        return users.map(user => `
+          <div class="user-card">
+            <h3>${user.nome || '-'}</h3>
+            <p><strong>Idade:</strong> ${user.idade || '-'}</p>
+            <p><strong>Email:</strong> ${user.email || '-'}</p>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('buscar').addEventListener('click', () => {
+        const nome = document.getElementById('nomePesquisa').value.trim();
+        const target = document.getElementById('respUsuario');
+        target.className = 'result';
+        target.innerHTML = '<p>Buscando...</p>';
+
+        const query = nome ? `?nome=${encodeURIComponent(nome)}` : '';
+        fetch(`http://localhost:3000/dados${query}`)
+          .then(async r => {
+            const data = await r.json();
+            if (!r.ok) throw data;
+            return data;
+          })
+          .then(users => {
+            target.className = 'result';
+            const data = Array.isArray(users) ? users : [users];
+            target.innerHTML = renderUsers(data);
+          })
+          .catch(e => {
+            showMessage(e.erro || 'Erro ao buscar usuário.');
+          });
+      });
+    </script>
+  </body>
+</html>

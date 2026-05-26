@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>Sistema de Boletos</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="style.css">
+    </head>
+<body>
+
+<header>
+  <nav>
+    <h1>API Boletos</h1>
+    <ul>
+      <li><a href="consulta.html">CONSULTA BOLETO</a></li>
+      <li><a href="usuario.html">USUÁRIO</a></li>
+      <li><a href="criarUsuario.html">CRIAR USUÁRIO</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+
+  <div id="boleto" class="card active">
+    <h2>Registrar Boleto</h2>
+    <input id="sacado" placeholder="Sacado">
+    <input id="endereco" placeholder="Endereço">
+    <input id="valor" placeholder="R$ 0,00" inputmode="decimal">
+    <div class="bank-field">
+      <img id="bankLogo" src="bank-icons/default.svg" alt="Logo do banco">
+      <select id="banco">
+        <option value="" disabled selected>Selecione o banco</option>
+        <option value="SANTANDER">SANTANDER</option>
+        <option value="BRADESCO">BRADESCO</option>
+        <option value="NUBANK">NUBANK</option>
+        <option value="ITAÚ">ITAÚ</option>
+        <option value="BANCO DO BRASIL">BANCO DO BRASIL</option>
+        <option value="SISPRIME">SISPRIME</option>
+        <option value="SICREDI">SICREDI</option>
+      </select>
+    </div>
+    <input id="documento" placeholder="Documento">
+    <button onclick="enviarBoleto()">Enviar</button>
+    <div id="respBoleto"></div>
+  </div>
+
+  <script>
+        const bankLogos = {
+          'SANTANDER': 'bank-icons/santander.svg',
+          'BRADESCO': 'bank-icons/bradesco.svg',
+          'NUBANK': 'bank-icons/nubank.svg',
+          'ITAÚ': 'bank-icons/itau.svg',
+          'BANCO DO BRASIL': 'bank-icons/bb.svg',
+          'SISPRIME': 'bank-icons/sisprime.svg',
+          'SICREDI': 'bank-icons/sicredi.svg'
+        };
+
+        const bancoSelect = document.getElementById('banco');
+        const bankLogo = document.getElementById('bankLogo');
+        const valorInput = document.getElementById('valor');
+
+        function formatCurrency(value) {
+          const numeric = value.replace(/[^\d]/g, '');
+          const number = Number(numeric) / 100;
+          return number.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+            minimumFractionDigits: 2
+          });
+        }
+
+        function parseCurrency(value) {
+          return value.replace(/\D/g, '');
+        }
+
+        valorInput.addEventListener('input', () => {
+          const raw = parseCurrency(valorInput.value);
+          valorInput.value = raw ? formatCurrency(raw) : '';
+        });
+
+        bancoSelect.addEventListener('change', () => {
+          const logo = bankLogos[bancoSelect.value] || 'bank-icons/default.svg';
+          bankLogo.src = logo;
+          bankLogo.alt = bancoSelect.value ? `${bancoSelect.value} logo` : 'Logo do banco';
+        });
+
+        function enviarBoleto() {
+          const resp = document.getElementById('respBoleto');
+          resp.className = '';
+          resp.innerText = '';
+
+          fetch('http://localhost:3000/boleto', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+              sacado: document.getElementById('sacado').value,
+              endereco: document.getElementById('endereco').value,
+              valor: parseCurrency(document.getElementById('valor').value),
+              banco: bancoSelect.value,
+              documento: document.getElementById('documento').value
+              })
+          })
+          .then(async r => {
+              const data = await r.json();
+              if (!r.ok) throw data;
+              return data;
+          })
+          .then(d => {
+              resp.classList.add('msg', 'sucesso');
+              resp.innerText = d.mensagem || 'Boleto registrado com sucesso!';
+          })
+          .catch(e => {
+              resp.classList.add('msg', 'erro');
+              resp.innerText = e.erro || 'Erro ao registrar boleto';
+          });
+        }
+    </script>
+
+</main>
+
+</body>
+</html>
