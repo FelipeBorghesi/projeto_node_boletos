@@ -41,7 +41,7 @@ Este projeto implementa uma API simples em Node.js que recebe dados de usuário 
 ## Instalação
 
 ```bash
-cd c:\Users\felip\OneDrive\Documentos\projetos\projetonode
+cd (onde_voce_baixou_seu_projeto)
 npm install
 ```
 
